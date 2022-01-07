@@ -32,7 +32,7 @@ impl FirebaseAuthBearer for MyOwnSession {
 
 #[tokio::main]
 async fn main() -> errors::Result<()> {
-    let credentials = Credentials::from_file("firebase-service-account.json")?;
+    let credentials = Credentials::from_file("firebase-service-account.json").await?;
     #[derive(serde::Serialize)]
     struct TestData {
         an_int: u32,

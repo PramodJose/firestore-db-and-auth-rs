@@ -282,8 +282,11 @@ pub mod user {
                 .json(&CustomJwtToFirebaseID::new(encoded, with_refresh_token))
                 .send()
                 .await?;
+            println!("Here's the error");
             let resp = extract_google_api_error_async(resp, || user_id.to_owned()).await?;
+            println!("And now we are back");
             let r: CustomJwtToFirebaseIDResponse = resp.json().await?;
+            println!("And yet again!");
 
             Ok(Session {
                 user_id: user_id.to_owned(),

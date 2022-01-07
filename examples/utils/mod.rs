@@ -50,9 +50,12 @@ pub async fn from_cache_file(cache_file: &std::path::Path, c: &Credentials) -> e
     } else {
         // If not present, download the two jwks (specific service account + google system account),
         // merge them into one set of keys and store them in the cache file.
-        let mut jwks = JWKSet::new(&download_google_jwks(&c.client_email).await?)?;
+        let jwks = download_google_jwks(&c.client_email).await?;
+        let mut jwks = JWKSet::new(&jwks.0)?;
+
+        //let mut jwks = JWKSet::new(&x.0)?;
         jwks.keys
-            .append(&mut JWKSet::new(&download_google_jwks("securetoken@system.gserviceaccount.com").await?)?.keys);
+            .append(&mut JWKSet::new(&download_google_jwks("securetoken@system.gserviceaccount.com").await?.0)?.keys);
         let f = File::create(cache_file)?;
         serde_json::to_writer_pretty(f, &jwks)?;
         jwks
@@ -68,12 +71,12 @@ pub async fn valid_test_credentials() -> errors::Result<Credentials> {
     let mut jwks_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     jwks_path.push("firebase-service-account.jwks");
 
-    let mut cred: Credentials = Credentials::new(include_str!("../../tests/service-account-test.json"))?;
+    let mut cred: Credentials = Credentials::new(include_str!("../../tests/service-account-test.json")).await?;
 
     // Only download the public keys once, and cache them.
     let jwkset = from_cache_file(jwks_path.as_path(), &cred).await?;
     cred.add_jwks_public_keys(&jwkset);
-    cred.verify()?;
+    cred.verify().await?;
 
     Ok(cred)
 }
